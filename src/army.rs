@@ -1,11 +1,12 @@
 use crate::troop::Troop;
+use crate::troop_amt::*;
 
 use std::{collections::HashMap,fmt};
 
 #[derive(Clone)]
 pub struct Army {
     name: String,
-    pub units: HashMap<Troop, u32> //Troop type, Count
+    pub units: HashMap<Troop, TroopAmt> //Troop type, Count
 }
 
 impl Army {
@@ -16,21 +17,17 @@ impl Army {
         }
     }
 
-    pub fn add(&mut self, troop: Troop, count: u32) {
-        *self.units.entry(troop).or_insert(0) += count;
+    pub fn add(&mut self, troop: Troop, count: f32) {
+        self.units.entry(troop).or_insert(TroopAmt::new(0.0)).count += count;
     }
 
-    pub fn subtract(&mut self, troop: Troop, count: u32) {
-        let cur = self.units.get_mut(&troop);
-        if cur.is_none() {
-            return;
-        }
-
-        let cur_val = cur.unwrap();
-        if *cur_val <= count {
-            self.units.remove(&troop);
-        }   else {
-            *cur_val -= count;
+    pub fn subtract(&mut self, troop: Troop, count: f32) {
+        if let Some(cur_val) = self.units.get_mut(&troop) {
+            if cur_val.count <= count {
+                self.units.remove(&troop);
+            } else {
+                cur_val.count -= count;
+            }
         }
     }
 
@@ -45,9 +42,9 @@ impl Army {
 
 impl fmt::Display for Army {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "Army: {}", self.name)?;
-        for (troop, count) in &self.units {
-            writeln!(f, "  {}: {}", troop, count)?;
+        writeln!(f, "{}", self.name)?;
+        for (troop, amt) in &self.units {
+            writeln!(f, "  {}: {}", troop, amt.count)?;
         }
         Ok(())
     }

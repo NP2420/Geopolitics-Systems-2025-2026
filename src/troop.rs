@@ -114,7 +114,7 @@ impl DefaultTroop {
         }
     }
 
-    pub fn territory_strength(self) -> f32 {
+    pub fn capture_strength(self) -> f32 {
         let strength = match self {
             DefaultTroop::Infantry => CaptureStrength::Amazing,
             DefaultTroop::SpecialForces => CaptureStrength::Bad,
