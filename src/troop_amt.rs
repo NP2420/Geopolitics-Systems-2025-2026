@@ -11,8 +11,4 @@ impl TroopAmt {
             disabled: 0.0,
         }
     }
-
-    pub fn disable(mut self, percent: f32) {
-        self.disabled = if self.disabled + percent > 1.0 { 1.0 } else { self.disabled + percent };
-    }
 }

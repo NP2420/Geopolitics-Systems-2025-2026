@@ -21,15 +21,15 @@ impl Army {
         self.units.entry(troop).or_insert(TroopAmt::new(0.0)).count += count;
     }
 
-    pub fn subtract(&mut self, troop: Troop, count: f32) {
-        if let Some(cur_val) = self.units.get_mut(&troop) {
-            if cur_val.count <= count {
-                self.units.remove(&troop);
-            } else {
-                cur_val.count -= count;
-            }
-        }
-    }
+    // pub fn subtract(&mut self, troop: Troop, count: f32) {
+    //     if let Some(cur_val) = self.units.get_mut(&troop) {
+    //         if cur_val.count <= count {
+    //             self.units.remove(&troop);
+    //         } else {
+    //             cur_val.count -= count;
+    //         }
+    //     }
+    // }
 
     // pub fn remove_all(&mut self) {
     //     self.units.drain();

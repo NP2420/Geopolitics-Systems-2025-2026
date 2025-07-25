@@ -49,14 +49,14 @@ impl Troop {
 
     pub fn off_add(self) -> i32 {
         match self {
-            Troop::Default(..) => 1,
+            Troop::Default(..) => 0,
             Troop::Custom { offensive_add,.. } => offensive_add,
         }
     }
 
     pub fn def_add(self) -> i32 {
         match self {
-            Troop::Default(..) => 1,
+            Troop::Default(..) => 0,
             Troop::Custom { defensive_add,.. } => defensive_add,
         }
     }
