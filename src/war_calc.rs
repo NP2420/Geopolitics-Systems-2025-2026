@@ -34,7 +34,7 @@ const RUNS: u8 = 3;
  * This is to see what the outcome and stats of a war is without actually losing troops
  */
 
-pub fn test_calc(offense: &Army, defense: &Army, offense_boost: i16, defense_boost: i16) -> bool {
+pub fn test_calc(offense: &Army, defense: &Army, offense_boost: f32, defense_boost: f32) -> bool {
     let mut off_clone = offense.clone();
     let mut def_clone = defense.clone();
 
@@ -72,19 +72,19 @@ pub fn test_calc(offense: &Army, defense: &Army, offense_boost: i16, defense_boo
  * Returns: True if offense wins; False if defense wins
  */
 
-pub fn calc(off: &mut Army, def: &mut Army, off_boost: i16, def_boost: i16) -> bool {
+pub fn calc(off: &mut Army, def: &mut Army, off_boost: f32, def_boost: f32) -> bool {
     
     //Runs (Battle)
     for _ in 0..RUNS {
         //The disabling ratios go before fighting
         fight_disables(off, def, off_boost, def_boost);
-        fight_disables(def, off, off_boost, def_boost);
+        fight_disables(def, off, def_boost, off_boost);
 
         let def_copy = def.clone();
 
         //The normal ratios now fight
         fight_armies(off, def, off_boost, def_boost);
-        fight_armies(&def_copy, off, off_boost, def_boost);
+        fight_armies(&def_copy, off, def_boost, off_boost);
 
         //Remove units that have died from hashmap
         remove_dead(off);
@@ -99,14 +99,6 @@ pub fn calc(off: &mut Army, def: &mut Army, off_boost: i16, def_boost: i16) -> b
     capture_strength_army(off) > capture_strength_army(def)
 }
 
-pub fn army_val(army: &Army) -> f32 {
-    let mut sum = 0.0;
-    for (troop, amt) in army.units.iter() {
-        sum += val(*troop, amt.count);
-    }
-    sum
-}
-
 /* 
  * Value of a troop
  */
@@ -115,7 +107,23 @@ pub fn val(troop: Troop, count: f32) -> f32 {
     count as f32 * (troop.get_default().value() as f32 + troop.def_add() as f32)
 }
 
-pub fn fight_disables(att_army: &Army, def_army: &mut Army, att_boost: i16, def_boost: i16) {
+/* 
+ * Value of an army
+ */
+
+pub fn army_val(army: &Army) -> f32 {
+    let mut sum = 0.0;
+    for (troop, amt) in army.units.iter() {
+        sum += val(*troop, amt.count);
+    }
+    sum
+}
+
+/*
+ * All disabling interactions fight
+ */
+
+pub fn fight_disables(att_army: &Army, def_army: &mut Army, att_boost: f32, def_boost: f32) {
     for (att_troop, att_amt) in att_army.units.iter() {
         
         let def_tot = allocation_tot(att_troop, def_army);
@@ -135,7 +143,11 @@ pub fn fight_disables(att_army: &Army, def_army: &mut Army, att_boost: i16, def_
     }
 }
 
-pub fn fight_armies(att_army: &Army, def_army: &mut Army, att_boost: i16, def_boost: i16) {
+/*
+ * All none disabling interactions fight
+ */
+
+pub fn fight_armies(att_army: &Army, def_army: &mut Army, att_boost: f32, def_boost: f32) {
     for (att_troop, att_amt) in att_army.units.iter() {
 
         let def_tot = allocation_tot(att_troop, def_army);
@@ -176,9 +188,9 @@ pub fn allocation_tot(att_troop: &Troop, def_army: &Army) -> f32 {
  * One unit fights a troop
  */
 
-pub fn fight_troop(att_troop: Troop, att_amt: TroopAmt, att_boost: i16, allocated: f32, def_troop: Troop, def_amt: &mut TroopAmt, def_boost: i16) {
-    let att_mult = (att_boost as f32) * 0.1 + 1.0;
-    let def_mult = (def_boost as f32) * 0.1 + 1.0;
+pub fn fight_troop(att_troop: Troop, att_amt: TroopAmt, att_boost: f32, allocated: f32, def_troop: Troop, def_amt: &mut TroopAmt, def_boost: f32) {
+    let att_mult = att_boost * 0.1 + 1.0;
+    let def_mult = def_boost * 0.1 + 1.0;
 
     let att_base = att_troop.get_default().value() as f32 + att_troop.off_add() as f32;
     let def_base = def_troop.get_default().value() as f32 + def_troop.def_add() as f32;
@@ -202,7 +214,7 @@ pub fn fight_troop(att_troop: Troop, att_amt: TroopAmt, att_boost: i16, allocate
 
     let normalize = def_base * def_mult;
 
-    if normalize <= 0.0 { //maybe
+    if normalize <= 0.0 {
         (*def_amt).count = 0.0;
     } else {
         (*def_amt).count = def_value / normalize;
