@@ -3,7 +3,6 @@ mod army;
 mod war_calc;
 mod territory_calc;
 mod territory;
-mod calc_tools;
 
 use crate::{army::Army, territory::Territory, territory_calc::*, troop::*, war_calc::*};
 

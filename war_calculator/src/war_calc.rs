@@ -1,6 +1,5 @@
 use crate::army::*;
 use crate::troop::*;
-use crate::calc_tools::*;
 
 use colored::*;
 
@@ -30,16 +29,16 @@ const RUNS: u8 = 3;
  */
 
 pub fn test_calc(offense: &mut Army, defense: &mut Army, offense_boost: u32, defense_boost: u32) -> bool {
-    let off_pre_str = army_val(offense);
-    let def_pre_str = army_val(defense);
+    let off_pre_str = offense.val();
+    let def_pre_str = defense.val();
 
     println!("{}", "BEFORE".bold().blue());
     println!("Offense Army: {}Value: {}\n\nDefense Army: {}Value: {}\n", offense, off_pre_str.to_string().yellow(), defense, def_pre_str.to_string().yellow());
 
     let result = calc(offense, defense, offense_boost, defense_boost);
 
-    let off_pos_str = army_val(offense);
-    let def_pos_str = army_val(&defense);
+    let off_pos_str = offense.val();
+    let def_pos_str = defense.val();
 
     println!("{}", "AFTER".bold().blue());
     println!("Offense Army: {}Value: {}\n\nDefense Army: {}Value: {}\n", offense, off_pos_str.to_string().yellow(), defense, def_pos_str.to_string().yellow());
@@ -78,13 +77,13 @@ pub fn calc(off: &mut Army, def: &mut Army, off_boost: u32, def_boost: u32) -> b
         fight_armies(&def_copy, off, def_boost, off_boost);
 
         //Remove units that have died from hashmap
-        remove_dead(off);
-        remove_dead(def);
+        off.remove_dead();
+        def.remove_dead();
     }
 
     //Round Armies
-    round_army(off);
-    round_army(def);
+    off.round_army();
+    def.round_army();
 
     //Outcome (Winner of territory)
     capture_strength_army(off) > capture_strength_army(def)
@@ -107,7 +106,7 @@ pub fn fight_disables(att_army: &Army, def_army: &mut Army, att_boost: u32, def_
             }
 
             let ratio = Ratio::Arrow.ratio(); //Disable ratio uses Arrow ratio for allocation purposes
-            let allocated: f32 = (def_val(*def_troop, (*def_amt).count) * ratio * ratio) / def_tot;
+            let allocated: f32 = (def_troop.def_val(def_amt.count) * ratio * ratio) / def_tot;
 
             fight_troop(*att_troop, *att_amt, att_boost, allocated, *def_troop, def_amt, def_boost);
         }
@@ -131,7 +130,7 @@ pub fn fight_armies(att_army: &Army, def_army: &mut Army, att_boost: u32, def_bo
             }
 
             let ratio = matchup.ratio();
-            let allocated = if def_tot == 0.0 { 0.0 } else { (def_val(*def_troop, (*def_amt).count) * ratio * ratio) / def_tot };
+            let allocated = if def_tot == 0.0 { 0.0 } else { (def_troop.def_val(def_amt.count) * ratio * ratio) / def_tot };
 
             fight_troop(*att_troop, *att_amt, att_boost, allocated, *def_troop, def_amt, def_boost);
         }
@@ -149,7 +148,7 @@ pub fn allocation_tot(att_troop: &Troop, def_army: &Army) -> f32 {
         let matchup = att_troop.get_matchup(*def_troop);
         let ratio = if matchup == Ratio::Disable { Ratio::Arrow.ratio() } else { matchup.ratio() };
 
-        def_tot += def_val(*def_troop, (*def_amt).count) * ratio * ratio;
+        def_tot += def_troop.def_val(def_amt.count) * ratio * ratio;
     }
 
     def_tot

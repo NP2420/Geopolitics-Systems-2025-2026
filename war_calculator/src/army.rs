@@ -20,6 +20,32 @@ impl Army {
         self.units.entry(troop).or_insert(TroopAmt::new(0.0)).count += count;
     }
 
+    pub fn remove_dead(&mut self) {
+        self.units.retain(|_, amt| amt.count > 0.0);
+    }
+
+    pub fn round_army(&mut self) {
+        for (_, amt) in self.units.iter_mut() {
+            amt.count = amt.count.round();
+        }
+    }
+
+    pub fn val(&self) -> f32 {
+        let mut sum = 0.0;
+        for (troop, amt) in self.units.iter() {
+            sum += troop.val(amt.count);
+        }
+        sum
+    }
+
+    pub fn off_val(&self) -> f32 {
+        let mut sum = 0.0;
+        for (troop, amt) in self.units.iter() {
+            sum += troop.off_val(amt.count);
+        }
+        sum
+    }
+
     // Likely needed in future additions
 
     // pub fn subtract(&mut self, troop: Troop, count: f32) {
