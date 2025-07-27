@@ -1,17 +1,44 @@
-use crate::capture_strength::*;
-use crate::ratio::*;
+use crate::war_calc::CaptureStrength;
 
 use std::fmt;
 
 /*
- * This file defines the `Troop` enum, which represents different types of troops
+ * This enum defines the ratios used when one troop fights another troop.
+ * 
+ * (Example) An infantry against another infantry has ArrowToSelf ratio.
+ */
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum Ratio {
+    Disable,
+    Arrow,
+    ArrowToSelf,
+    OkColor,
+    BadColor,
+    Unable
+}
+
+impl Ratio {
+    pub const fn ratio(&self) -> f32 {
+        match self {
+            Ratio::Disable => 2.0,
+            Ratio::Arrow => 1.0,
+            Ratio::ArrowToSelf => 0.75,
+            Ratio::OkColor => 0.5,
+            Ratio::BadColor => 0.25,
+            Ratio::Unable => 0.0,
+        }
+    }
+}
+
+/*
+ * `Troop` enum represents different types of troops
  * Each troop has
+ * - A type
  * - A monetary value (purchasing)
  * - A strength capability when taking territories
  * - A stealth level to determine whether or not it is seen
- * - A name
  */
-
  
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Troop {
@@ -58,6 +85,21 @@ impl Troop {
         match self {
             Troop::Default(..) => 0,
             Troop::Custom { defensive_add,.. } => defensive_add,
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct TroopAmt {
+    pub count: f32,
+    pub disabled: f32, //Percent of count that is disabled (unusable) 0-1
+}
+
+impl TroopAmt {
+    pub fn new(amt: f32) -> Self {
+        TroopAmt{
+            count: amt as f32,
+            disabled: 0.0,
         }
     }
 }

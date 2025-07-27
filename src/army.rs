@@ -1,5 +1,4 @@
-use crate::troop::Troop;
-use crate::troop_amt::*;
+use crate::troop::{Troop, TroopAmt};
 
 use std::{collections::HashMap,fmt};
 
@@ -10,7 +9,7 @@ pub struct Army {
 }
 
 impl Army {
-    pub fn new(name: String) -> Self { //This prob also should have a default name instead of an insert (maybe, maybe not)
+    pub fn new(name: String) -> Self { //Fix naming (It should be automated name base on player/country name)
         Army {
             name,
             units: HashMap::new(),
@@ -20,6 +19,8 @@ impl Army {
     pub fn add(&mut self, troop: Troop, count: f32) {
         self.units.entry(troop).or_insert(TroopAmt::new(0.0)).count += count;
     }
+
+    // Likely needed in future additions
 
     // pub fn subtract(&mut self, troop: Troop, count: f32) {
     //     if let Some(cur_val) = self.units.get_mut(&troop) {

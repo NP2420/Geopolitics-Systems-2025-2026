@@ -1,58 +1,50 @@
 use crate::army::*;
 use crate::troop::*;
-use crate::ratio::*;
-use crate::troop_amt::*;
+use crate::calc_tools::*;
+
 use colored::*;
-
-/*
- * ============================================ VERSION TWO (2) =====================================================
- * In this version, all disabling ratios happen before each specific run
- * 
- * Notes:
- * N/A
- */
-
 
 /*
  * Note: Attacking doesn't mean offense, it means the unit attacking the other unit. Same thing with defending.
  * 
  * Attacking: The unit that attcks the defending unit
- * Defending: The unit defending from the attacking unit
+ * Defending: The unit defending from the attacking unit (consider renaming)
  * 
  * Offense: The person invading the other
  * Defense: The person on defense from the invasion
+ * 
+ * In this version, all disabling ratios happen before each specific run
  */
 
 /*
  * Constants:
- * Runs describes the number of battles/iterations it goes through to get a result. More runs favours a larger force to a certain extent.
+ * - Runs describes the number of battles/iterations it goes through to get a result. More runs favours a larger force to a certain extent.
  */
 
 const RUNS: u8 = 3;
 
 /*
- * This is to see what the outcome and stats of a war is without actually losing troops
+ * Testing contains terminal stats and information
+ * 
+ * Returns: Output from calc
  */
 
-pub fn test_calc(offense: &Army, defense: &Army, offense_boost: f32, defense_boost: f32) -> bool {
-    let mut off_clone = offense.clone();
-    let mut def_clone = defense.clone();
-
-    let off_pre_str = army_val(&off_clone);
-    let def_pre_str = army_val(&def_clone);
+pub fn test_calc(offense: &mut Army, defense: &mut Army, offense_boost: u32, defense_boost: u32) -> bool {
+    let off_pre_str = army_val(offense);
+    let def_pre_str = army_val(defense);
 
     println!("{}", "BEFORE".bold().blue());
-    println!("Offense Army: {}Value: {}\n\nDefense Army: {}Value: {}\n", off_clone, off_pre_str.to_string().yellow(), def_clone, def_pre_str.to_string().yellow());
+    println!("Offense Army: {}Value: {}\n\nDefense Army: {}Value: {}\n", offense, off_pre_str.to_string().yellow(), defense, def_pre_str.to_string().yellow());
 
-    let result = calc(&mut off_clone, &mut def_clone, offense_boost, defense_boost);
+    let result = calc(offense, defense, offense_boost, defense_boost);
 
-    let off_pos_str = army_val(&off_clone);
-    let def_pos_str = army_val(&def_clone);
+    let off_pos_str = army_val(offense);
+    let def_pos_str = army_val(&defense);
 
     println!("{}", "AFTER".bold().blue());
-    println!("Offense Army: {}Value: {}\n\nDefense Army: {}Value: {}\n", off_clone, off_pos_str.to_string().yellow(), def_clone, def_pos_str.to_string().yellow());
+    println!("Offense Army: {}Value: {}\n\nDefense Army: {}Value: {}\n", offense, off_pos_str.to_string().yellow(), defense, def_pos_str.to_string().yellow());
     println!("Offense wins: {} || Defense wins: {}", result, !result);
-    println!("Offense: {} || Defense: {}", capture_strength_army(&off_clone), capture_strength_army(&def_clone));
+    println!("Offense: {} || Defense: {}", capture_strength_army(offense), capture_strength_army(defense));
 
     println!("{}", "\nSTATS".bold().blue());
     
@@ -67,13 +59,12 @@ pub fn test_calc(offense: &Army, defense: &Army, offense_boost: f32, defense_boo
 }
 
 /*
- * This will cause the offense and defense armies to loose the correct amount of troops.
+ * This will cause the offense and defense armies to loose the correct amount of troops
  * 
  * Returns: True if offense wins; False if defense wins
  */
 
-pub fn calc(off: &mut Army, def: &mut Army, off_boost: f32, def_boost: f32) -> bool {
-    
+pub fn calc(off: &mut Army, def: &mut Army, off_boost: u32, def_boost: u32) -> bool {
     //Runs (Battle)
     for _ in 0..RUNS {
         //The disabling ratios go before fighting
@@ -99,31 +90,11 @@ pub fn calc(off: &mut Army, def: &mut Army, off_boost: f32, def_boost: f32) -> b
     capture_strength_army(off) > capture_strength_army(def)
 }
 
-/* 
- * Value of a troop
- */
-
-pub fn val(troop: Troop, count: f32) -> f32 {
-    count as f32 * (troop.get_default().value() as f32 + troop.def_add() as f32)
-}
-
-/* 
- * Value of an army
- */
-
-pub fn army_val(army: &Army) -> f32 {
-    let mut sum = 0.0;
-    for (troop, amt) in army.units.iter() {
-        sum += val(*troop, amt.count);
-    }
-    sum
-}
-
 /*
  * All disabling interactions fight
  */
 
-pub fn fight_disables(att_army: &Army, def_army: &mut Army, att_boost: f32, def_boost: f32) {
+pub fn fight_disables(att_army: &Army, def_army: &mut Army, att_boost: u32, def_boost: u32) {
     for (att_troop, att_amt) in att_army.units.iter() {
         
         let def_tot = allocation_tot(att_troop, def_army);
@@ -136,7 +107,7 @@ pub fn fight_disables(att_army: &Army, def_army: &mut Army, att_boost: f32, def_
             }
 
             let ratio = Ratio::Arrow.ratio(); //Disable ratio uses Arrow ratio for allocation purposes
-            let allocated: f32 = (val(*def_troop, (*def_amt).count) * ratio * ratio) / def_tot;
+            let allocated: f32 = (def_val(*def_troop, (*def_amt).count) * ratio * ratio) / def_tot;
 
             fight_troop(*att_troop, *att_amt, att_boost, allocated, *def_troop, def_amt, def_boost);
         }
@@ -144,10 +115,10 @@ pub fn fight_disables(att_army: &Army, def_army: &mut Army, att_boost: f32, def_
 }
 
 /*
- * All none disabling interactions fight
+ * All none-disabling interactions fight
  */
 
-pub fn fight_armies(att_army: &Army, def_army: &mut Army, att_boost: f32, def_boost: f32) {
+pub fn fight_armies(att_army: &Army, def_army: &mut Army, att_boost: u32, def_boost: u32) {
     for (att_troop, att_amt) in att_army.units.iter() {
 
         let def_tot = allocation_tot(att_troop, def_army);
@@ -160,7 +131,7 @@ pub fn fight_armies(att_army: &Army, def_army: &mut Army, att_boost: f32, def_bo
             }
 
             let ratio = matchup.ratio();
-            let allocated = (val(*def_troop, (*def_amt).count) * ratio * ratio) / def_tot;
+            let allocated = if def_tot == 0.0 { 0.0 } else { (def_val(*def_troop, (*def_amt).count) * ratio * ratio) / def_tot };
 
             fight_troop(*att_troop, *att_amt, att_boost, allocated, *def_troop, def_amt, def_boost);
         }
@@ -178,7 +149,7 @@ pub fn allocation_tot(att_troop: &Troop, def_army: &Army) -> f32 {
         let matchup = att_troop.get_matchup(*def_troop);
         let ratio = if matchup == Ratio::Disable { Ratio::Arrow.ratio() } else { matchup.ratio() };
 
-        def_tot += val(*def_troop, (*def_amt).count) * ratio * ratio;
+        def_tot += def_val(*def_troop, (*def_amt).count) * ratio * ratio;
     }
 
     def_tot
@@ -188,9 +159,9 @@ pub fn allocation_tot(att_troop: &Troop, def_army: &Army) -> f32 {
  * One unit fights a troop
  */
 
-pub fn fight_troop(att_troop: Troop, att_amt: TroopAmt, att_boost: f32, allocated: f32, def_troop: Troop, def_amt: &mut TroopAmt, def_boost: f32) {
-    let att_mult = att_boost * 0.1 + 1.0;
-    let def_mult = def_boost * 0.1 + 1.0;
+pub fn fight_troop(att_troop: Troop, att_amt: TroopAmt, att_boost: u32, allocated: f32, def_troop: Troop, def_amt: &mut TroopAmt, def_boost: u32) {
+    let att_mult = att_boost as f32 * 0.01 + 1.0;
+    let def_mult = def_boost as f32 * 0.01 + 1.0;
 
     let att_base = att_troop.get_default().value() as f32 + att_troop.off_add() as f32;
     let def_base = def_troop.get_default().value() as f32 + def_troop.def_add() as f32;
@@ -214,38 +185,31 @@ pub fn fight_troop(att_troop: Troop, att_amt: TroopAmt, att_boost: f32, allocate
 
     let normalize = def_base * def_mult;
 
-    if normalize <= 0.0 {
-        (*def_amt).count = 0.0;
-    } else {
-        (*def_amt).count = def_value / normalize;
-    }
+    (*def_amt).count = if normalize <= 0.0 { 0.0 } else { def_value / normalize };
 }
 
 /*
- * Remove units that have count of 0
+ * This enum defines the $ / power when deciding winner of battle
  */
 
-pub fn remove_dead(army: &mut Army) {
-    let mut remove = Vec::new();
+#[derive(Clone, Copy, Debug)]
+pub enum CaptureStrength {
+    Amazing,
+    Good,
+    Bad,
+    Terrible,
+    Unable
+}
 
-    for (troop, amt) in army.units.iter() {
-        if amt.count == 0.0 {
-            remove.push(*troop);
+impl CaptureStrength {
+    pub const fn ratio(self) -> f32 {
+        match self {
+            CaptureStrength::Amazing => 0.75,
+            CaptureStrength::Good => 1.0,
+            CaptureStrength::Bad => 1.5,
+            CaptureStrength::Terrible => 2.0,
+            CaptureStrength::Unable => 0.0
         }
-    }
-
-    for troop in remove {
-        army.units.remove(&troop);
-    }
-}
-
-/*
- * Regular round an army
- */
-
-pub fn round_army(army: &mut Army) {
-    for (_, amt) in army.units.iter_mut() {
-        amt.count = amt.count.round();
     }
 }
 
