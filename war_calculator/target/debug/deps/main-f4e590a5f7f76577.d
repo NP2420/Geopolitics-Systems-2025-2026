@@ -1,0 +1,11 @@
+C:\Users\Nat06\OneDrive\Documents\Geopolitics\War Calculator 2025-2026\target\debug\deps\libmain-f4e590a5f7f76577.rmeta: src\main.rs src\troop.rs src\ratio.rs src\army.rs src\war_calc.rs src\capture_strength.rs src\troop_amt.rs
+
+C:\Users\Nat06\OneDrive\Documents\Geopolitics\War Calculator 2025-2026\target\debug\deps\main-f4e590a5f7f76577.d: src\main.rs src\troop.rs src\ratio.rs src\army.rs src\war_calc.rs src\capture_strength.rs src\troop_amt.rs
+
+src\main.rs:
+src\troop.rs:
+src\ratio.rs:
+src\army.rs:
+src\war_calc.rs:
+src\capture_strength.rs:
+src\troop_amt.rs:
