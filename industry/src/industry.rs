@@ -41,7 +41,7 @@ impl StockName {
     ];
 }
 
-struct Stocks {
+pub struct Stocks {
     pub stocks: HashMap<StockName, f32>
 }
 
