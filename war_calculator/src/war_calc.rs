@@ -43,7 +43,7 @@ pub fn test_calc(offense: &mut Army, defense: &mut Army, offense_boost: u32, def
     println!("{}", "AFTER".bold().blue());
     println!("Offense Army: {}Value: {}\n\nDefense Army: {}Value: {}\n", offense, off_pos_str.to_string().yellow(), defense, def_pos_str.to_string().yellow());
     println!("Offense wins: {} || Defense wins: {}", result, !result);
-    println!("Offense: {} || Defense: {}", capture_strength_army(offense), capture_strength_army(defense));
+    println!("Offense: {} || Defense: {}", offense.capture_strength(), defense.capture_strength());
 
     println!("{}", "\nSTATS".bold().blue());
     
@@ -86,7 +86,7 @@ pub fn calc(off: &mut Army, def: &mut Army, off_boost: u32, def_boost: u32) -> b
     def.round_army();
 
     //Outcome (Winner of territory)
-    capture_strength_army(off) > capture_strength_army(def)
+    off.capture_strength() > def.capture_strength()
 }
 
 /*
@@ -106,7 +106,7 @@ pub fn fight_disables(att_army: &Army, def_army: &mut Army, att_boost: u32, def_
             }
 
             let ratio = Ratio::Arrow.ratio(); //Disable ratio uses Arrow ratio for allocation purposes
-            let allocated: f32 = (def_troop.def_val(def_amt.count) * ratio * ratio) / def_tot;
+            let allocated: f32 = ((def_troop.get_default().value() as f32 + def_troop.def_add() as f32) * ratio * ratio) / def_tot;
 
             fight_troop(*att_troop, *att_amt, att_boost, allocated, *def_troop, def_amt, def_boost);
         }
@@ -130,7 +130,7 @@ pub fn fight_armies(att_army: &Army, def_army: &mut Army, att_boost: u32, def_bo
             }
 
             let ratio = matchup.ratio();
-            let allocated = if def_tot == 0.0 { 0.0 } else { (def_troop.def_val(def_amt.count) * ratio * ratio) / def_tot };
+            let allocated = if def_tot == 0.0 { 0.0 } else { ( (def_troop.get_default().value() as f32 + def_troop.def_add() as f32) * ratio * ratio) / def_tot };
 
             fight_troop(*att_troop, *att_amt, att_boost, allocated, *def_troop, def_amt, def_boost);
         }
@@ -148,7 +148,7 @@ pub fn allocation_tot(att_troop: &Troop, def_army: &Army) -> f32 {
         let matchup = att_troop.get_matchup(*def_troop);
         let ratio = if matchup == Ratio::Disable { Ratio::Arrow.ratio() } else { matchup.ratio() };
 
-        def_tot += def_troop.def_val(def_amt.count) * ratio * ratio;
+        def_tot += (def_troop.get_default().value() as f32 + def_troop.def_add() as f32) * def_amt.count * ratio * ratio;
     }
 
     def_tot
@@ -210,16 +210,4 @@ impl CaptureStrength {
             CaptureStrength::Unable => 0.0
         }
     }
-}
-
-/*
- * Return capture_strength numbers for an army
- */
-
-pub fn capture_strength_army(army: &Army) -> f32 {
-    let mut sum_strength = 0.0;
-    for (troop, amt) in army.units.iter() {
-        sum_strength += troop.get_default().capture_strength() * amt.count;
-    }
-    sum_strength
 }

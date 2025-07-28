@@ -37,24 +37,14 @@ pub fn territory_capture(army: &mut Army, territory: &Territory) -> bool {
 
     if capture_cost >= army_val { //Failed Capture
         let percent = capture_cost * FAILURE_LOST_PERCENT / army_val;
-        percent_loss(army, percent);
+        army.percent_loss(percent);
 
         return false;
     }
     else { //Successful Capture
         let percent = capture_cost / army_val;
-        percent_loss(army, percent);
+        army.percent_loss(percent);
 
         return true;
     }
-}
-
-pub fn percent_loss(army: &mut Army, percent: f32) {
-    let clamped = percent.clamp(0.0, 1.0);
-    for (_, amt) in army.units.iter_mut() {
-        amt.count *= 1.0 - clamped;
-    }
-
-    army.remove_dead();
-    army.round_army();
 }

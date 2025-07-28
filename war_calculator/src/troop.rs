@@ -87,18 +87,6 @@ impl Troop {
             Troop::Custom { defensive_add,.. } => defensive_add,
         }
     }
-
-    pub fn val(self, count: f32) -> f32 {
-        count as f32 * self.get_default().value() as f32
-    }
-
-    pub fn off_val(self, count: f32) -> f32 {
-        count as f32 * (self.get_default().value() as f32 + self.off_add() as f32)
-    }
-
-    pub fn def_val(self, count: f32) -> f32 {
-        count as f32 * (self.get_default().value() as f32 + self.def_add() as f32)
-    }
 }
 
 #[derive(Clone, Copy)]

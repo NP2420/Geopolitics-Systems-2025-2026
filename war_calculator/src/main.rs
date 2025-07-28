@@ -18,7 +18,7 @@ pub fn main() {
         defensive_add: 80000,
         stealth_add: 5}, 100.0);
 
-    let territory = Territory::new(String::from("Canada"), 2, 5);
+    let territory = Territory::new(String::from("Canada"), 1, 1);
     test_territory_capture(&mut army, &territory);
 
     let mut army2 = Army::new(String::from("NP2"));

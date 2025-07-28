@@ -31,19 +31,31 @@ impl Army {
     }
 
     pub fn val(&self) -> f32 {
-        let mut sum = 0.0;
-        for (troop, amt) in self.units.iter() {
-            sum += troop.val(amt.count);
-        }
-        sum
+        self.units.iter()
+            .map(|(troop, amt)| troop.get_default().value() as f32 * amt.count)
+            .sum()
     }
 
     pub fn off_val(&self) -> f32 {
-        let mut sum = 0.0;
-        for (troop, amt) in self.units.iter() {
-            sum += troop.off_val(amt.count);
+        self.units.iter()
+            .map(|(troop, amt)| (troop.get_default().value() as f32 + troop.off_add() as f32) * amt.count)
+            .sum()
+    }
+
+    pub fn capture_strength(&self) -> f32 {
+        self.units.iter()
+            .map(|(troop, amt)| (troop.get_default().capture_strength() * amt.count))
+            .sum()
+    }
+
+    pub fn percent_loss(&mut self, percent: f32) {
+        let clamped = percent.clamp(0.0, 1.0);
+        for (_, amt) in self.units.iter_mut() {
+            amt.count *= 1.0 - clamped;
         }
-        sum
+
+        self.remove_dead();
+        self.round_army();
     }
 
     // Likely needed in future additions
