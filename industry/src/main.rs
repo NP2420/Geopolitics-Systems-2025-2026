@@ -2,6 +2,18 @@ mod industry;
 mod player;
 mod resources;
 
+use crate::{industry::*, player::*};
+
 fn main() {
-    println!("Hello, world!");
+    let mut stocks = GlobalStocks::new();
+    let mut player = Player::new(String::from("hi"));
+    
+    player.industry_stats.TEMP_distribute(vec![0.5, 0.3, 0.2, 0.0, 0.0, 0.0]);
+
+    println!("{}", player.industry_stats);
+
+    stocks.end_industry();
+    player.industry_stats.end_industry(&stocks);
+
+    println!("{}", player.industry_stats);
 }
