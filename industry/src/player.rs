@@ -1,4 +1,4 @@
-use crate::{industry::GlobalStocks, resources::Resource};
+use crate::{industry::GlobalStocks,resources::Resource};
 use crate::industry::Stocks;
 
 use std::{collections::HashMap,fmt};
@@ -24,6 +24,11 @@ impl Player {
             industry_stats: IndustryStats::new()
         }
     }
+
+    pub fn end_industry(&mut self, industry: &GlobalStocks) { //still need to figure out how to use global stocks  
+        self.industry_stats.end_industry(industry);
+        self.player_stats.end_industry(&self.industry_stats);
+    }
 }
 
 struct PlayerStats {
@@ -39,7 +44,7 @@ impl PlayerStats {
         let resources = Resource::ALL
             .iter()
             .map(|name| (*name, INITIAL_RESOURCES))
-            .collect::<HashMap<Resource, u32>>();
+            .collect();
 
         PlayerStats {
             money: INITIAL_MONEY,
@@ -48,6 +53,11 @@ impl PlayerStats {
             population: INITIAL_POPULATION,
             perception: INITIAL_PERCEPTION
         }
+    }
+
+    fn end_industry(&mut self, industry_stats: &IndustryStats) {
+        self.money += industry_stats.revenue;
+        //get resources
     }
 }
 
@@ -66,29 +76,27 @@ impl IndustryStats {
         }
     }
 
-    pub fn TEMP_distribute(&mut self, vec: Vec<f32>) { //remove later
-        for ((_, value), new_amount) in self.investments.stocks.iter_mut().zip(vec.into_iter()) {
-            *value = new_amount * self.revenue as f32;
-        }
-    }
-
-    pub fn end_industry(&mut self, industry: &GlobalStocks) { //This could get moved elsewhere idk cuz it feels like bad practice to use globalstocks
+    fn end_industry(&mut self, industry: &GlobalStocks) {
         let uninvested_revenue = self.revenue - self.investments.sum() as f64;
 
-        for (name, value) in &mut self.investments.stocks {
+        for (name, value) in self.investments.iter_mut() {
             let old_value = *value;
 
             *value *= industry.get_percent(name);
 
             //Foundation Growth
 
-            if let Some(foundation) = self.foundations.stocks.get_mut(name) {
-                *foundation += *value - old_value;
-            }
+            *self.foundations.get_mut(name) += *value - old_value;
         }
 
         self.revenue = uninvested_revenue + self.investments.sum() as f64;
     }
+
+    // pub fn TEMP_distribute(&mut self, vec: Vec<f32>) { //remove later
+    //     for ((_, value), new_amount) in self.investments.stocks.iter_mut().zip(vec.into_iter()) {
+    //         *value = new_amount * self.revenue as f32;
+    //     }
+    // }
 }
 
 impl fmt::Display for IndustryStats {

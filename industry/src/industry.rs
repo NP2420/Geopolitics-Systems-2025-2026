@@ -56,7 +56,7 @@ impl fmt::Display for StockName {
 }
 
 pub struct Stocks {
-    pub stocks: HashMap<StockName, f32>
+    stocks: HashMap<StockName, f32>
 }
 
 impl Stocks {
@@ -64,7 +64,7 @@ impl Stocks {
         let stocks = StockName::ALL
             .iter()
             .map(|name| (*name, value))
-            .collect::<HashMap<StockName, f32>>();
+            .collect();
         Stocks { stocks }
     }
 
@@ -77,7 +77,15 @@ impl Stocks {
         if sum == 0.0 {
             return 0.0
         }
-        self.stocks.get(&name).expect("Stock not found?") / sum
+        self.stocks.get(&name).unwrap() / sum
+    }
+
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = (&StockName, &mut f32)> {
+        self.stocks.iter_mut()
+    }
+
+    pub fn get_mut(&mut self, name: &StockName) -> &mut f32 {
+        self.stocks.get_mut(name).unwrap()
     }
 }
 
@@ -132,8 +140,8 @@ impl GlobalStocks {
     fn natural_growth(&mut self, rng: &mut ThreadRng) {
         for (name, value) in &mut self.stocks.stocks {
             //Increasing Stock Value
-            let midpoint = self.nat_growth_midpoint.stocks.get_mut(name).expect("Missing midpoint?");
-            let range = self.nat_growth_range.stocks.get_mut(name).expect("Missing range?");
+            let midpoint = self.nat_growth_midpoint.stocks.get_mut(name).unwrap();
+            let range = self.nat_growth_range.stocks.get_mut(name).unwrap();
 
             let upper_bound = *midpoint + *range / 2.0;
             let lower_bound = *midpoint - *range / 2.0;
